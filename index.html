@@ -1,159 +1,638 @@
 <!DOCTYPE html>
-<html dir="ltr" lang="en">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام تتبع البيليت - مصنع الحديد</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            margin: 40px;
-            color: #333;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #1e293b 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
         .header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
+            padding-top: 20px;
         }
-        .name {
-            font-size: 24px;
-            font-weight: bold;
-            color: #2c3e50;
+
+        .header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(to right, #60a5fa, #22d3ee);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             margin-bottom: 10px;
         }
-        .contact-info {
-            display: flex;
-            justify-content: center;
+
+        .header p {
+            color: #94a3b8;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid #475569;
+            border-radius: 20px;
+            padding: 25px;
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-label {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+
+        .stat-value.blue { color: #60a5fa; }
+        .stat-value.green { color: #4ade80; }
+        .stat-value.red { color: #f87171; }
+
+        .search-filter-bar {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid #475569;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .search-box {
+            position: relative;
             margin-bottom: 20px;
-            color: #555;
         }
-        .section {
-            margin-bottom: 25px;
+
+        .search-box input {
+            width: 100%;
+            background: rgba(51, 65, 85, 0.5);
+            border: 1px solid #475569;
+            border-radius: 15px;
+            padding: 15px 50px 15px 20px;
+            color: white;
+            font-size: 1rem;
+            transition: border-color 0.3s;
         }
-        .section-title {
-            font-size: 18px;
-            font-weight: bold;
-            color: #2c3e50;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 5px;
-            margin-bottom: 15px;
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #60a5fa;
         }
-        .job-title {
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 5px;
+
+        .search-icon {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
         }
-        .company {
-            font-style: italic;
-            color: #666;
-        }
-        ul {
-            margin: 10px 0;
-            padding-left: 20px;
-        }
-        li {
-            margin-bottom: 5px;
-        }
-        .links {
+
+        .filter-buttons {
             display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1rem;
+        }
+
+        .filter-btn.active.all {
+            background: #60a5fa;
+            color: white;
+        }
+
+        .filter-btn.active.good {
+            background: #4ade80;
+            color: white;
+        }
+
+        .filter-btn.active.reject {
+            background: #f87171;
+            color: white;
+        }
+
+        .filter-btn:not(.active) {
+            background: rgba(51, 65, 85, 0.5);
+            color: #cbd5e1;
+        }
+
+        .add-btn {
+            width: 100%;
+            background: linear-gradient(to right, #3b82f6, #22d3ee);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 30px;
+            transition: transform 0.2s;
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+        }
+
+        .add-btn:hover {
+            transform: scale(1.02);
+        }
+
+        .add-form {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid #475569;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            display: none;
+        }
+
+        .add-form.show {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #cbd5e1;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            background: rgba(51, 65, 85, 0.5);
+            border: 1px solid #475569;
+            border-radius: 12px;
+            padding: 12px;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #60a5fa;
+        }
+
+        .status-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .status-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
             justify-content: center;
+            gap: 8px;
+        }
+
+        .status-btn.selected.good {
+            background: #4ade80;
+            color: white;
+        }
+
+        .status-btn.selected.reject {
+            background: #f87171;
+            color: white;
+        }
+
+        .status-btn:not(.selected) {
+            background: rgba(51, 65, 85, 0.5);
+            color: #cbd5e1;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .btn-save {
+            flex: 1;
+            background: #4ade80;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn-save:hover {
+            background: #22c55e;
+        }
+
+        .btn-cancel {
+            flex: 1;
+            background: #475569;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn-cancel:hover {
+            background: #334155;
+        }
+
+        .billets-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .billet-card {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid #475569;
+            border-radius: 20px;
+            padding: 25px;
+            transition: border-color 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .billet-card:hover {
+            border-color: #60a5fa;
+        }
+
+        .billet-info {
+            display: flex;
+            align-items: center;
             gap: 20px;
-            margin-top: 20px;
+            flex: 1;
         }
-        .links a {
-            color: #3498db;
-            text-decoration: none;
+
+        .billet-status-icon {
+            padding: 15px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        @media print {
-            body {
-                margin: 20px;
+
+        .billet-status-icon.good {
+            background: rgba(74, 222, 128, 0.2);
+            color: #4ade80;
+        }
+
+        .billet-status-icon.reject {
+            background: rgba(248, 113, 113, 0.2);
+            color: #f87171;
+        }
+
+        .billet-details {
+            flex: 1;
+        }
+
+        .billet-number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .billet-status-text {
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        .billet-notes {
+            color: #64748b;
+            font-size: 0.85rem;
+            margin-top: 8px;
+        }
+
+        .billet-date {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-left: 20px;
+        }
+
+        .delete-btn {
+            background: rgba(248, 113, 113, 0.2);
+            color: #f87171;
+            border: none;
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .delete-btn:hover {
+            background: rgba(248, 113, 113, 0.3);
+        }
+
+        .empty-state {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid #475569;
+            border-radius: 20px;
+            padding: 60px;
+            text-align: center;
+        }
+
+        .empty-state p {
+            color: #94a3b8;
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
             }
-            .section-title {
-                break-after: avoid;
+
+            .billet-card {
+                flex-direction: column;
+                align-items: stretch;
             }
-            .job-title {
-                break-after: avoid;
+
+            .billet-info {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .billet-date {
+                margin: 10px 0 0 0;
             }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="name">Mahmoud Mohamed Abdallah Nasr</div>
-        <div class="contact-info">
-            <span>📱 01069715039</span>
-            <span>📍 Sohag / Akhmeem, El-Salamouni</span>
-            <span>📧 mahmoud.m.a.1358@gmail.com</span>
-            <span>📅 2002/5/6</span>
+    <div class="container">
+        <div class="header">
+            <h1>نظام تتبع البيليت</h1>
+            <p>إدارة أرقام البيليت - مصنع الحديد</p>
         </div>
-        <div class="links">
-            <a href="https://mahmoudhamadaa.github.io/m-h/" target="_blank">📁 Portfolio</a>
-            <a href="https://www.linkedin.com/in/mahmoud-mohamed-647440172" target="_blank">💼 LinkedIn</a>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">إجمالي البيليت</div>
+                <div class="stat-value blue" id="totalCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">
+                    <span>✓</span> جاهز للقص
+                </div>
+                <div class="stat-value green" id="goodCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">
+                    <span>✗</span> ريجكت
+                </div>
+                <div class="stat-value red" id="rejectCount">0</div>
+            </div>
         </div>
-    </div>
-    <div class="section">
-        <div class="section-title">Professional Summary</div>
-        <p>
-            Motivated and detail-oriented Management Information Systems graduate with hands-on experience in web development, community engagement, and project management. <br>Proven ability to collaborate effectively, manage time efficiently, and solve complex problems in dynamic environments.<br> Skilled in using a range of technologies including HTML, CSS, PHP, and MySQL to build interactive and efficient web applications.<br> A dedicated learner with a strong commitment to continuous improvement and a passion for digital transformation and e-commerce systems.
-        </p>
-    </div>
-    <div class="section">
-        <div class="section-title">Previous Experiences</div>
-        <ul>
-            <li>
-                <strong>2020-2022:</strong> Worked at the Local Community Development Association in El-Salamouni
-                <p>Worked at the association, learned how to deal with the public and organize workshops and meetings, gaining experience in public interaction and data entry on computers.</p>
-            </li>
-            <li>
-                <strong>2023-2024:</strong> Worked at Hi-Tech Library for Documentation
-                <p>Worked on computers in the library, mainly using Office programs to create scientific research.</p>
-            </li>
-            <li>
-                <strong>2023-2024:</strong> Graduation Project at the Higher Institute of E-Commerce Systems
-                <p>Worked on several projects during my studies, gaining experience in building web applications using HTML, CSS, PHP, and MySQL.</p>
-            </li>
-        </ul>
+
+        <div class="search-filter-bar">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" placeholder="ابحث عن رقم البيليت... (مثال: 0126-001)">
+            </div>
+            <div class="filter-buttons">
+                <button class="filter-btn active all" data-filter="all">الكل</button>
+                <button class="filter-btn good" data-filter="good">✓ جيد</button>
+                <button class="filter-btn reject" data-filter="reject">✗ ريجكت</button>
+            </div>
+        </div>
+
+        <button class="add-btn" id="addBtn">+ إضافة بيليت جديد</button>
+
+        <div class="add-form" id="addForm">
+            <h3 style="margin-bottom: 20px; font-size: 1.5rem;">إضافة بيليت جديد</h3>
+            <div class="form-group">
+                <label>رقم البيليت *</label>
+                <input type="text" id="billetNumber" placeholder="مثال: 0126-001">
+            </div>
+            <div class="form-group">
+                <label>الحالة *</label>
+                <div class="status-buttons">
+                    <button class="status-btn selected good" data-status="good">✓ جاهز للقص</button>
+                    <button class="status-btn reject" data-status="reject">✗ ريجكت</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>التاريخ</label>
+                <input type="date" id="billetDate">
+            </div>
+            <div class="form-group">
+                <label>ملاحظات</label>
+                <textarea id="billetNotes" rows="3" placeholder="أي ملاحظات إضافية..."></textarea>
+            </div>
+            <div class="form-actions">
+                <button class="btn-save" id="saveBtn">حفظ</button>
+                <button class="btn-cancel" id="cancelBtn">إلغاء</button>
+            </div>
+        </div>
+
+        <div class="billets-list" id="billetsList"></div>
     </div>
 
-    <div class="section">
-        <div class="section-title">Education</div>
-        <p>Bachelor’s in Management Information Systems - Higher Institute of E-Commerce Systems, Sohag (2024)</p>
-    </div>
+    <script>
+        let billets = [];
+        let currentFilter = 'all';
+        let selectedStatus = 'good';
 
-    <div class="section">
-        <div class="section-title">Skills</div>
-        <ul>
-            <li>Computer Literacy</li>
-            <li>Communication</li>
-            <li>Time Management</li>
-            <li>Creative Thinking</li>
-            <li>Problem Solving</li>
-            <li>Social Work</li>
-            <li>Effective Leadership</li>
-        </ul>
-    </div>
-    <div class="section">
-        <div class="section-title">Programming Languages</div>
-        <ul>
-            <li>PHP</li>
-            <li>MySQL</li>
-            <li>HTML</li>
-            <li>CSS</li>
-            <li>JavaScript</li>
-            <!-- Add more programming languages here if needed -->
-        </ul>
-    </div>
-    
-    <div class="section">
-        <div class="section-title">Certificates and Trainings</div>
-        <ul>
-            <li>Participation in Social Media Strategies under the Ministry of Education and Scientific Research - 2024/7/8-9</li>
-            <li>CIQ Certificate in Basics of Digital Marketing - 2024/8/10</li>
-            <li>HP Life Certificate in Effective Leadership - 2024/8/10</li>
-            <li>Training in PHP and MySQL web development on Mahara Tech - 2024/6/21</li>
-            <li>Basic Computer Training on Mahara Tech - 2023/7/4</li>
-            <li>Marketing Workshop for UNHANCE Project - 2023/10/14</li>
-            <li>ICDL Training on Training Platform - 2021/10/12</li>
-        </ul>
-    </div>
+        async function loadBillets() {
+            try {
+                const result = await window.storage.list('billet:');
+                if (result && result.keys) {
+                    const loadedBillets = await Promise.all(
+                        result.keys.map(async (key) => {
+                            const data = await window.storage.get(key);
+                            return data ? JSON.parse(data.value) : null;
+                        })
+                    );
+                    billets = loadedBillets.filter(b => b !== null);
+                }
+            } catch (error) {
+                console.log('تحميل البيانات للمرة الأولى');
+            }
+            updateStats();
+            renderBillets();
+        }
+
+        function updateStats() {
+            document.getElementById('totalCount').textContent = billets.length;
+            document.getElementById('goodCount').textContent = billets.filter(b => b.status === 'good').length;
+            document.getElementById('rejectCount').textContent = billets.filter(b => b.status === 'reject').length;
+        }
+
+        function renderBillets() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = billets.filter(b => {
+                const matchesSearch = b.number.toLowerCase().includes(searchTerm);
+                const matchesFilter = currentFilter === 'all' || b.status === currentFilter;
+                return matchesSearch && matchesFilter;
+            });
+
+            const listEl = document.getElementById('billetsList');
+            
+            if (filtered.length === 0) {
+                listEl.innerHTML = `
+                    <div class="empty-state">
+                        <p>${searchTerm ? 'لا توجد نتائج بحث' : 'لم يتم إضافة أي بيليت بعد'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            listEl.innerHTML = filtered.map(b => `
+                <div class="billet-card">
+                    <div class="billet-info">
+                        <div class="billet-status-icon ${b.status}">
+                            ${b.status === 'good' ? '✓' : '✗'}
+                        </div>
+                        <div class="billet-details">
+                            <div class="billet-number">${b.number}</div>
+                            <div class="billet-status-text">${b.status === 'good' ? 'جاهز للقص' : 'ريجكت'}</div>
+                            ${b.notes ? `<div class="billet-notes">${b.notes}</div>` : ''}
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div class="billet-date">${b.date}</div>
+                        <button class="delete-btn" onclick="deleteBillet('${b.number}')">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function saveBillet() {
+            const number = document.getElementById('billetNumber').value.trim();
+            if (!number) {
+                alert('الرجاء إدخال رقم البيليت');
+                return;
+            }
+
+            const billet = {
+                number: number,
+                status: selectedStatus,
+                date: document.getElementById('billetDate').value,
+                notes: document.getElementById('billetNotes').value,
+                id: Date.now(),
+                createdAt: new Date().toISOString()
+            };
+
+            try {
+                await window.storage.set(`billet:${billet.number}`, JSON.stringify(billet));
+                billets.push(billet);
+                updateStats();
+                renderBillets();
+                resetForm();
+                document.getElementById('addForm').classList.remove('show');
+            } catch (error) {
+                alert('حدث خطأ في الحفظ');
+            }
+        }
+
+        async function deleteBillet(number) {
+            if (confirm(`هل تريد حذف البيليت ${number}؟`)) {
+                try {
+                    await window.storage.delete(`billet:${number}`);
+                    billets = billets.filter(b => b.number !== number);
+                    updateStats();
+                    renderBillets();
+                } catch (error) {
+                    alert('حدث خطأ في الحذف');
+                }
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('billetNumber').value = '';
+            document.getElementById('billetDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('billetNotes').value = '';
+            selectedStatus = 'good';
+            document.querySelectorAll('.status-btn').forEach(btn => {
+                btn.classList.toggle('selected', btn.dataset.status === 'good');
+            });
+        }
+
+        document.getElementById('addBtn').addEventListener('click', () => {
+            document.getElementById('addForm').classList.toggle('show');
+        });
+
+        document.getElementById('saveBtn').addEventListener('click', saveBillet);
+
+        document.getElementById('cancelBtn').addEventListener('click', () => {
+            document.getElementById('addForm').classList.remove('show');
+            resetForm();
+        });
+
+        document.querySelectorAll('.status-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                selectedStatus = e.target.dataset.status;
+                document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('selected'));
+                e.target.classList.add('selected');
+            });
+        });
+
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                currentFilter = e.target.dataset.filter;
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                renderBillets();
+            });
+        });
+
+        document.getElementById('searchInput').addEventListener('input', renderBillets);
+
+        document.getElementById('billetDate').value = new Date().toISOString().split('T')[0];
+
+        loadBillets();
+    </script>
 </body>
 </html>
