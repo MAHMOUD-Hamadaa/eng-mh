@@ -110,6 +110,10 @@
             border-color: #60a5fa;
         }
 
+        .search-box input::placeholder {
+            color: #94a3b8;
+        }
+
         .search-icon {
             position: absolute;
             right: 20px;
@@ -185,6 +189,18 @@
 
         .add-form.show {
             display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .form-group {
@@ -207,6 +223,12 @@
             padding: 12px;
             color: white;
             font-size: 1rem;
+            font-family: inherit;
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: #94a3b8;
         }
 
         .form-group input:focus,
@@ -232,6 +254,7 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
+            font-size: 1rem;
         }
 
         .status-btn.selected.good {
@@ -247,6 +270,10 @@
         .status-btn:not(.selected) {
             background: rgba(51, 65, 85, 0.5);
             color: #cbd5e1;
+        }
+
+        .status-btn:hover {
+            transform: scale(1.05);
         }
 
         .form-actions {
@@ -265,6 +292,7 @@
             font-weight: bold;
             cursor: pointer;
             transition: background 0.3s;
+            font-size: 1rem;
         }
 
         .btn-save:hover {
@@ -281,6 +309,7 @@
             font-weight: bold;
             cursor: pointer;
             transition: background 0.3s;
+            font-size: 1rem;
         }
 
         .btn-cancel:hover {
@@ -299,14 +328,27 @@
             border: 1px solid #475569;
             border-radius: 20px;
             padding: 25px;
-            transition: border-color 0.3s;
+            transition: all 0.3s;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .billet-card:hover {
             border-color: #60a5fa;
+            transform: translateY(-3px);
         }
 
         .billet-info {
@@ -322,6 +364,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 1.5rem;
         }
 
         .billet-status-icon.good {
@@ -365,14 +408,16 @@
             background: rgba(248, 113, 113, 0.2);
             color: #f87171;
             border: none;
-            padding: 10px;
+            padding: 12px;
             border-radius: 10px;
             cursor: pointer;
-            transition: background 0.3s;
+            transition: all 0.3s;
+            font-size: 1.2rem;
         }
 
         .delete-btn:hover {
-            background: rgba(248, 113, 113, 0.3);
+            background: rgba(248, 113, 113, 0.4);
+            transform: scale(1.1);
         }
 
         .empty-state {
@@ -387,6 +432,26 @@
         .empty-state p {
             color: #94a3b8;
             font-size: 1.2rem;
+        }
+
+        .success-message {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #4ade80;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-weight: bold;
+            box-shadow: 0 10px 30px rgba(74, 222, 128, 0.3);
+            z-index: 1000;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+
+        .success-message.show {
+            display: block;
         }
 
         @media (max-width: 768px) {
@@ -407,10 +472,16 @@
             .billet-date {
                 margin: 10px 0 0 0;
             }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="success-message" id="successMessage">تم الحفظ بنجاح ✓</div>
+
     <div class="container">
         <div class="header">
             <h1>نظام تتبع البيليت</h1>
@@ -485,23 +556,30 @@
         let currentFilter = 'all';
         let selectedStatus = 'good';
 
-        async function loadBillets() {
+        // تحميل البيانات من localStorage
+        function loadBillets() {
             try {
-                const result = await window.storage.list('billet:');
-                if (result && result.keys) {
-                    const loadedBillets = await Promise.all(
-                        result.keys.map(async (key) => {
-                            const data = await window.storage.get(key);
-                            return data ? JSON.parse(data.value) : null;
-                        })
-                    );
-                    billets = loadedBillets.filter(b => b !== null);
+                const saved = localStorage.getItem('billets');
+                if (saved) {
+                    billets = JSON.parse(saved);
                 }
             } catch (error) {
-                console.log('تحميل البيانات للمرة الأولى');
+                console.error('خطأ في تحميل البيانات:', error);
+                billets = [];
             }
             updateStats();
             renderBillets();
+        }
+
+        // حفظ البيانات في localStorage
+        function saveBilletsToStorage() {
+            try {
+                localStorage.setItem('billets', JSON.stringify(billets));
+                return true;
+            } catch (error) {
+                console.error('خطأ في حفظ البيانات:', error);
+                return false;
+            }
         }
 
         function updateStats() {
@@ -543,16 +621,30 @@
                     </div>
                     <div style="display: flex; align-items: center; gap: 15px;">
                         <div class="billet-date">${b.date}</div>
-                        <button class="delete-btn" onclick="deleteBillet('${b.number}')">🗑️</button>
+                        <button class="delete-btn" onclick="deleteBillet(${b.id})">🗑️</button>
                     </div>
                 </div>
             `).join('');
         }
 
-        async function saveBillet() {
+        function showSuccessMessage() {
+            const msg = document.getElementById('successMessage');
+            msg.classList.add('show');
+            setTimeout(() => {
+                msg.classList.remove('show');
+            }, 2000);
+        }
+
+        function saveBillet() {
             const number = document.getElementById('billetNumber').value.trim();
             if (!number) {
                 alert('الرجاء إدخال رقم البيليت');
+                return;
+            }
+
+            // التحقق من عدم تكرار الرقم
+            if (billets.some(b => b.number === number)) {
+                alert('هذا الرقم موجود بالفعل! الرجاء إدخال رقم مختلف.');
                 return;
             }
 
@@ -565,28 +657,27 @@
                 createdAt: new Date().toISOString()
             };
 
-            try {
-                await window.storage.set(`billet:${billet.number}`, JSON.stringify(billet));
-                billets.push(billet);
+            billets.push(billet);
+            
+            if (saveBilletsToStorage()) {
                 updateStats();
                 renderBillets();
                 resetForm();
                 document.getElementById('addForm').classList.remove('show');
-            } catch (error) {
-                alert('حدث خطأ في الحفظ');
+                showSuccessMessage();
+            } else {
+                alert('حدث خطأ في الحفظ. الرجاء المحاولة مرة أخرى.');
+                billets.pop(); // إلغاء الإضافة
             }
         }
 
-        async function deleteBillet(number) {
-            if (confirm(`هل تريد حذف البيليت ${number}؟`)) {
-                try {
-                    await window.storage.delete(`billet:${number}`);
-                    billets = billets.filter(b => b.number !== number);
-                    updateStats();
-                    renderBillets();
-                } catch (error) {
-                    alert('حدث خطأ في الحذف');
-                }
+        function deleteBillet(id) {
+            const billet = billets.find(b => b.id === id);
+            if (billet && confirm(`هل تريد حذف البيليت ${billet.number}؟`)) {
+                billets = billets.filter(b => b.id !== id);
+                saveBilletsToStorage();
+                updateStats();
+                renderBillets();
             }
         }
 
@@ -600,6 +691,7 @@
             });
         }
 
+        // Event Listeners
         document.getElementById('addBtn').addEventListener('click', () => {
             document.getElementById('addForm').classList.toggle('show');
         });
@@ -630,8 +722,8 @@
 
         document.getElementById('searchInput').addEventListener('input', renderBillets);
 
+        // تهيئة التطبيق
         document.getElementById('billetDate').value = new Date().toISOString().split('T')[0];
-
         loadBillets();
     </script>
 </body>
